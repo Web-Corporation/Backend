@@ -6,11 +6,22 @@ import com.sketch.user.UserService;
 import com.sketch.user.UserServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 public class AppConfig {
+    private final UserRepository userRepository;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final RedisTemplate<String, String> redisTemplate;
+
+    public AppConfig(UserRepository userRepository, JwtTokenProvider jwtTokenProvider, RedisTemplate<String, String> redisTemplate) {
+        this.userRepository = userRepository;
+        this.jwtTokenProvider = jwtTokenProvider;
+        this.redisTemplate = redisTemplate;
+    }
+
     @Bean
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
@@ -22,8 +33,8 @@ public class AppConfig {
     }
 
     @Bean
-    public UserService userService(JwtTokenProvider jwtTokenProvider){
-        return new UserServiceImpl(UserRepository(), passwordEncoder(),jwtTokenProvider);
+    public UserService userService() {
+        return new UserServiceImpl(userRepository, passwordEncoder(), jwtTokenProvider, redisTemplate);
     }
 
     

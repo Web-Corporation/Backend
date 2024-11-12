@@ -25,14 +25,15 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> loginUser(@RequestBody UserLoginDTO userLoginDTO) {
-        TokenInfo token = userService.loginUser(userLoginDTO);
-        if (token != null) {
+    public ResponseEntity<TokenInfo> loginUser(@RequestBody UserLoginDTO userLoginDTO) {
+        TokenInfo tokenInfo = userService.loginUser(userLoginDTO);
+        if (tokenInfo != null) {
             HttpHeaders headers = new HttpHeaders();
-            headers.add("Authorization", "Bearer " + token);
-            return ResponseEntity.ok().headers(headers).body("Login successful");
+            headers.add("Authorization", "Bearer " + tokenInfo.getAccessToken());
+            headers.add("Refresh-Token", tokenInfo.getRefreshToken());
+            return ResponseEntity.ok().headers(headers).body(tokenInfo);
         } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
     }
 
@@ -46,5 +47,3 @@ public class UserController {
         }
     }
 }
-
-

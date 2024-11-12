@@ -3,8 +3,13 @@ package com.sketch.user;
 import com.sketch.jwt.JwtTokenProvider;
 import com.sketch.jwt.TokenInfo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Date;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -12,22 +17,17 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final RedisTemplate<String, String> redisTemplate;
 
     @Autowired
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtTokenProvider jwtTokenProvider) {
+    public UserServiceImpl(UserRepository userRepository,
+                           PasswordEncoder passwordEncoder,
+                           JwtTokenProvider jwtTokenProvider,
+                           RedisTemplate<String, String> redisTemplate) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
-    }
-
-    @Override
-    public void registerUser(UserSaveDTO userSaveDTO) {
-        // UserEntity 생성 및 저장 (로드맵은 초기 생성 시 추가하지 않음)
-        UserEntity user = new UserEntity();
-        user.setUsername(userSaveDTO.getUsername());
-        user.setPassword(passwordEncoder.encode(userSaveDTO.getPassword()));
-
-        userRepository.save(user);
+        this.redisTemplate = redisTemplate;
     }
 
     @Override
@@ -35,22 +35,34 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByUsername(userLoginDTO.getUsername())
                 .filter(user -> passwordEncoder.matches(userLoginDTO.getPassword(), user.getPassword()))
                 .map(user -> {
-                    // Access Token과 Refresh Token 생성
                     String accessToken = jwtTokenProvider.generateAccessToken(user.getUsername());
                     String refreshToken = jwtTokenProvider.generateRefreshToken(user.getUsername());
 
-                    // TokenInfo 객체 생성 후 반환
                     return TokenInfo.builder()
                             .grantType("Bearer")
                             .accessToken(accessToken)
                             .refreshToken(refreshToken)
                             .build();
                 })
-                .orElse(null); // 인증 실패 시 null 반환
+                .orElse(null);
     }
 
     @Override
-    public boolean logoutUser(String token) {
-        return jwtTokenProvider.validateToken(token);
+    public boolean logoutUser(String accessToken) {
+        // 토큰 유효성 확인
+        if (jwtTokenProvider.validateToken(accessToken)) {
+            // 토큰 만료 시간 계산
+            Date expirationDate = jwtTokenProvider.getExpirationDate(accessToken);
+            long expirationInMillis = expirationDate.getTime() - System.currentTimeMillis();
+
+            // Redis에 토큰 블랙리스트로 저장
+            redisTemplate.opsForValue().set(accessToken, "logout", expirationInMillis, TimeUnit.MILLISECONDS);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isTokenBlacklisted(String token) {
+        return redisTemplate.hasKey(token);
     }
 }

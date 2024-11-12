@@ -42,8 +42,6 @@ dependencies {
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
-    runtimeOnly 'com.h2database:h2'
-
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     // JWT
@@ -53,6 +51,11 @@ dependencies {
 
     // Redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    //DB
+
+    //mysql
+    implementation 'mysql:mysql-connector-java:8.0.33'
 
 }
 

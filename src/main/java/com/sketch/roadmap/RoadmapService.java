@@ -1,5 +1,8 @@
 package com.sketch.roadmap;
 
-public interface RoadmapService {
+import com.sketch.jwt.TokenInfo;
+import com.sketch.user.UserLoginDTO;
 
+public interface RoadmapService {
+    boolean checkToken(String token);
 }

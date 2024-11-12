@@ -8,7 +8,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -31,6 +30,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public void registerUser(UserSaveDTO userSaveDTO) {
+        UserEntity user = new UserEntity();
+        user.setUsername(userSaveDTO.getUsername());
+        user.setPassword(passwordEncoder.encode(userSaveDTO.getPassword()));
+        userRepository.save(user);
+    }
+
+    @Override
     public TokenInfo loginUser(UserLoginDTO userLoginDTO) {
         return userRepository.findByUsername(userLoginDTO.getUsername())
                 .filter(user -> passwordEncoder.matches(userLoginDTO.getPassword(), user.getPassword()))
@@ -44,14 +51,13 @@ public class UserServiceImpl implements UserService {
                             .refreshToken(refreshToken)
                             .build();
                 })
-                .orElse(null);
+                .orElse(null); // 인증 실패 시 null 반환
     }
 
     @Override
     public boolean logoutUser(String accessToken) {
         // 토큰 유효성 확인
         if (jwtTokenProvider.validateToken(accessToken)) {
-            // 토큰 만료 시간 계산
             Date expirationDate = jwtTokenProvider.getExpirationDate(accessToken);
             long expirationInMillis = expirationDate.getTime() - System.currentTimeMillis();
 
@@ -60,9 +66,5 @@ public class UserServiceImpl implements UserService {
             return true;
         }
         return false;
-    }
-
-    public boolean isTokenBlacklisted(String token) {
-        return redisTemplate.hasKey(token);
     }
 }

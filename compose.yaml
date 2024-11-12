@@ -1,1 +1,21 @@
+version: '3'
 services:
+  springboot-service:
+    build:
+      context: .                    # Spring Boot Dockerfile 경로
+      dockerfile: Dockerfile        # Spring Boot Dockerfile 파일명
+    ports:
+      - "8080:8080"                 # Spring Boot 서버 포트 매핑
+    depends_on:
+      - python-service              # Python 서비스가 먼저 실행됨
+    environment:
+      - PYTHON_SERVICE_URL=http://python-service:5000 # Python 서비스의 URL
+
+  python-service:
+    build:
+      context: ./python-flask-app   # Python Dockerfile 경로
+      dockerfile: Dockerfile-python # Python Flask Dockerfile 파일명
+    ports:
+      - "5001:5000"                 # 호스트의 5001 포트를 Flask 컨테이너의 5000 포트에 매핑
+    environment:
+      - OPENAI_API_KEY=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

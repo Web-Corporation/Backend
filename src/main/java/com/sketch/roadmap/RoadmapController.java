@@ -1,34 +1,54 @@
 package com.sketch.roadmap;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
-@Controller
+@RestController
+@RequestMapping("/roadmap")
 public class RoadmapController {
-    @Value("${openai.key}")
-    String openai_apikey;
+    @Value("${PYTHON_SERVICE_URL}")
+    private String pythonUrl;
+    private final RoadmapService roadmapService;
+
+    @Autowired
+    public RoadmapController(RoadmapService roadmapService) {
+        this.roadmapService = roadmapService;
+    }
 
     @GetMapping("/createroadmap")
-    public String createRoadmap(@RequestBody TopicDTO topicDTO) {
-        String key = this.openai_apikey;
-        RestTemplate restTemplate = new RestTemplate();
-        String pythonServiceUrl = "http://python-service:8080/run-script?topic="+topicDTO.getTopic();
-        return restTemplate.getForObject(pythonServiceUrl, String.class);
+    public ResponseEntity<String> createRoadmap(@RequestHeader("Authorization") String accesstoken, @RequestBody TopicDTO topicDTO) {
+        if (roadmapService.checkToken(accesstoken)) {
+            RestTemplate restTemplate = new RestTemplate();
+
+            // Python 서버 URL 설정
+            String pythonServiceUrl = String.format("%s/createroadmap?topic=%s", pythonUrl, topicDTO.getTopic());
+
+            // Python 서버에 요청 보내기
+            String roadmap = restTemplate.getForObject(pythonServiceUrl, String.class);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Authorization", "Bearer " + accesstoken);
+            return ResponseEntity.ok().headers(headers).body(roadmap);
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token");
+        }
     }
 
-    @GetMapping()
-    public void saveRoadmap(){
-        return;
+    @PostMapping("/saveroadmap")
+    public void saveRoadmap() {
+        // 로드맵 저장 로직을 추가하세요
     }
 
-    @GetMapping()
-    public void modifyRoadmap(){
-        return;
+    @PutMapping("/modifyroadmap")
+    public void modifyRoadmap() {
+        // 로드맵 수정 로직을 추가하세요
     }
+
 
 //    @GetMapping("roadmap/getallroadmap")
 //    public RoadmapEntity getRoadmap(){

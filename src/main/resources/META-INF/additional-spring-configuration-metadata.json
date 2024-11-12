@@ -6,9 +6,9 @@
       "description": "Description for jwt.secret."
     },
     {
-      "name": "openai.key",
+      "name": "useSSL",
       "type": "java.lang.String",
-      "description": "Description for openai.key."
+      "description": "Description for useSSL."
     }
   ]
 }

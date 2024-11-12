@@ -1,6 +1,8 @@
 package com.sketch;
 
 import com.sketch.jwt.JwtTokenProvider;
+import com.sketch.roadmap.RoadmapService;
+import com.sketch.roadmap.RoadmapServiceImpl;
 import com.sketch.user.UserRepository;
 import com.sketch.user.UserService;
 import com.sketch.user.UserServiceImpl;
@@ -35,6 +37,11 @@ public class AppConfig {
     @Bean
     public UserService userService() {
         return new UserServiceImpl(userRepository, passwordEncoder(), jwtTokenProvider, redisTemplate);
+    }
+
+    @Bean
+    public RoadmapService roadmapService() {
+        return new RoadmapServiceImpl(jwtTokenProvider);
     }
 
     

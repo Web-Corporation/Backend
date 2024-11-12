@@ -1,0 +1,30 @@
+package com.sketch;
+
+import com.sketch.jwt.JwtTokenProvider;
+import com.sketch.user.UserRepository;
+import com.sketch.user.UserService;
+import com.sketch.user.UserServiceImpl;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+@Configuration
+public class AppConfig {
+    @Bean
+    public PasswordEncoder passwordEncoder(){
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public UserRepository UserRepository(){
+        return null;
+    }
+
+    @Bean
+    public UserService userService(JwtTokenProvider jwtTokenProvider){
+        return new UserServiceImpl(UserRepository(), passwordEncoder(),jwtTokenProvider);
+    }
+
+    
+}

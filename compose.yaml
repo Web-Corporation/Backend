@@ -1,19 +1,5 @@
 
 services:
-  mysql-service:
-    image: mysql:8.0.33
-    environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: local
-    ports:
-      - "3306:3306"
-    healthcheck:
-      test: [ "CMD-SHELL", "mysqladmin ping -h localhost" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: always
-
   springboot-service:
     build:
       context: .                    # Spring Boot Dockerfile 경로
@@ -21,14 +7,10 @@ services:
     ports:
       - "8080:8080"                 # Spring Boot 서버 포트 매핑
     depends_on:
-      - mysql-service
       - python-service              # Python 서비스가 먼저 실행됨
 
     environment:
       - PYTHON_SERVICE_URL=http://python-service:5000 # Python 서비스의 URL
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-service:3306/local
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=password
 
   python-service:
     build:

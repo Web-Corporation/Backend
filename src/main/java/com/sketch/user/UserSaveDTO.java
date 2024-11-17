@@ -1,10 +1,6 @@
 package com.sketch.user;
-
-import com.sketch.roadmap.SessionEntity;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.List;
 
 @Getter
 @Setter

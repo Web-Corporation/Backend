@@ -1,36 +1,24 @@
 package com.sketch.roadmap;
 
-import com.sketch.user.UserEntity;
 import jakarta.persistence.*;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-
-import java.util.List;
 
 @Entity
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 public class RoadmapEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // 로드맵 고유 ID
+    private Long roadmapId;
 
-    @Column(nullable = false)
-    private int achieved; // 달성률
+    private String username; // 로드맵과 연결된 사용자 이름
+    private String accessToken; // 인증용 토큰
+    private int profile;
+    private int achieved;
+    private boolean clear;
 
-    @Column(nullable = false)
-    private boolean clear; // 완료 여부
-
-    @OneToMany(mappedBy = "roadmapEntity", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<SessionEntity> sessions; // 세션 목록
-
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private UserEntity user; // 로드맵을 소유한 사용자
-
-    @Column(nullable = false)
-    private String title; // 로드맵 제목
+    @Lob
+    private String sessionData; // Flask 서버의 JSON 응답을 문자열로 저장
 }
+

@@ -43,9 +43,8 @@ public class AppConfig {
     @Bean
     public RoadmapService roadmapService(
             RoadmapRepository roadmapRepository,
-            JwtTokenProvider jwtTokenProvider,
-            UserRepository userRepository) {
-        return new RoadmapServiceImpl(roadmapRepository, userRepository, jwtTokenProvider);
+            JwtTokenProvider jwtTokenProvider) {
+        return new RoadmapServiceImpl(roadmapRepository, jwtTokenProvider);
     }
 
     

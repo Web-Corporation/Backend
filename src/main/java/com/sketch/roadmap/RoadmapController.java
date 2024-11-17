@@ -23,6 +23,9 @@ public class RoadmapController {
         this.roadmapService = roadmapService;
     }
 
+    /**
+     * Flask 서버로부터 로드맵 생성
+     */
     @GetMapping("/createroadmap")
     public ResponseEntity<String> createRoadmap(
             @RequestHeader("Authorization") String accessToken,
@@ -32,32 +35,36 @@ public class RoadmapController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token");
         }
 
-        // 2. Flask 서비스로 요청 보내기
+        // 2. Flask 호출
         RestTemplate restTemplate = new RestTemplate();
         String flaskUrl = flaskServiceUrl + "/createroadmap?topic=" + topic;
 
         try {
             String roadmapResponse = restTemplate.getForObject(flaskUrl, String.class);
-            return ResponseEntity.ok(roadmapResponse); // Flask의 결과를 반환
+            return ResponseEntity.ok(roadmapResponse); // Flask의 결과 반환
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to generate roadmap: " + e.getMessage());
         }
     }
 
-
+    /**
+     * 로드맵 저장
+     */
     @PostMapping("/save")
-    public ResponseEntity<String> saveRoadmap(@RequestBody RoadmapDTO roadmapDTO) {
+    public ResponseEntity<String> saveRoadmap(
+            @RequestHeader("Authorization") String accessToken
+            ,@RequestBody RoadmapDTO roadmapDTO) {
         // 1. 토큰 유효성 검사
-        if (!roadmapService.isTokenValid(roadmapDTO.getAccessToken())) {
+        if (!roadmapService.isTokenValid(accessToken)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token");
         }
 
-        // 2. 토큰에서 사용자 이름 추출
-        String username = roadmapService.extractUsername(roadmapDTO.getAccessToken());
+        // 2. 사용자 이름 확인
+        String username = roadmapService.extractUsername(accessToken);
+        roadmapDTO.setUsername(username);
 
         // 3. 로드맵 저장
-        roadmapService.saveRoadmap(roadmapDTO, username);
-
+        roadmapService.saveRoadmap(roadmapDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body("Roadmap saved successfully");
     }
 
@@ -77,17 +84,16 @@ public class RoadmapController {
     }
 
     @PutMapping("/update")
-    public ResponseEntity<String> updateRoadmap(@RequestBody RoadmapDTO roadmapDTO) {
+    public ResponseEntity<String> updateRoadmap(
+            @RequestHeader("Authorization") String accessToken,
+            @RequestBody RoadmapDTO roadmapDTO) {
         // 토큰 검증
-        if (!roadmapService.isTokenValid(roadmapDTO.getAccessToken())) {
+        if (!roadmapService.isTokenValid(accessToken)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token");
         }
 
-        // 사용자 이름 추출
-        String username = roadmapService.extractUsername(roadmapDTO.getAccessToken());
-
         // 로드맵 업데이트 로직 (로드맵 저장과 동일한 로직 사용 가능)
-        roadmapService.saveRoadmap(roadmapDTO, username);
+        roadmapService.saveRoadmap(roadmapDTO);
 
         return ResponseEntity.ok("Roadmap updated successfully");
     }

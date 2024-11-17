@@ -1,55 +1,39 @@
 package com.sketch.roadmap;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@NoArgsConstructor
-@AllArgsConstructor
+@Entity
 @Getter
 @Setter
-@Entity
-@Table(name = "session_table")
+@NoArgsConstructor
 public class SessionEntity {
-    @ManyToOne
-    private RoadmapEntity roadmapEntity;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "session_id")
-    private String sessionId;
+    private Long id;
 
-    @Column(name = "seq")
-    private int seq;
+    @ManyToOne
+    @JoinColumn(name = "roadmap_id", nullable = false)
+    private RoadmapEntity roadmapEntity; // 연관된 로드맵
 
-    @Column(name = "topic")
-    private String topic;
+    @Column(nullable = false)
+    private int seq;                // 순서 번호
 
-    @Column(name = "description")
-    private String description;
+    @Column(nullable = false)
+    private String topic;           // 세션 주제
 
-    @Column(name = "startDate")
-    private String startDate;
+    @Column(nullable = false)
+    private String description;     // 세션 설명
 
-    @Column(name = "deadLine")
-    private String deadLine;
+    @Column(nullable = false)
+    private String startDate;       // 시작 날짜 (YYYY-MM-DD 형식)
 
-    @Column(name = "note")
-    private String note;
+    @Column(nullable = false)
+    private String deadLine;        // 마감 날짜 (YYYY-MM-DD 형식)
 
-    public static SessionEntity SessionDTO2Entity(SessionDTO sessionDTO){
-        SessionEntity sessionEntity = new SessionEntity();
-
-        sessionEntity.setSessionId(sessionDTO.getSessionId());
-        sessionEntity.setSeq(sessionDTO.getSeq());
-        sessionEntity.setTopic(sessionDTO.getTopic());
-        sessionEntity.setDescription(sessionDTO.getDescription());
-        sessionEntity.setStartDate(sessionDTO.getStartDate());
-        sessionEntity.setDeadLine(sessionDTO.getDeadLine());
-        sessionEntity.setNote(sessionDTO.getNote());
-
-        return sessionEntity;
-    }
+    @Column
+    private String note;            // 추가 메모
 }

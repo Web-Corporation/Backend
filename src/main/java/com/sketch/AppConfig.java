@@ -1,6 +1,7 @@
 package com.sketch;
 
 import com.sketch.jwt.JwtTokenProvider;
+import com.sketch.roadmap.RoadmapRepository;
 import com.sketch.roadmap.RoadmapService;
 import com.sketch.roadmap.RoadmapServiceImpl;
 import com.sketch.user.UserRepository;
@@ -40,8 +41,11 @@ public class AppConfig {
     }
 
     @Bean
-    public RoadmapService roadmapService() {
-        return new RoadmapServiceImpl(jwtTokenProvider);
+    public RoadmapService roadmapService(
+            RoadmapRepository roadmapRepository,
+            JwtTokenProvider jwtTokenProvider,
+            UserRepository userRepository) {
+        return new RoadmapServiceImpl(roadmapRepository, userRepository, jwtTokenProvider);
     }
 
     

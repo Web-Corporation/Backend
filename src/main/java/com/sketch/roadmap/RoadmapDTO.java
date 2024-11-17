@@ -1,22 +1,18 @@
 package com.sketch.roadmap;
 
 
-import com.sketch.user.UserEntity;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.List;
 
+@Data
 @NoArgsConstructor
-@AllArgsConstructor
-@Getter
-@Setter
 public class RoadmapDTO {
-    private UserEntity userEntity;
-    private String roadmapId;
+    private String accessToken; // 저장 시 인증용
+    private int profile;
+    private int roadmapID;
     private int achieved;
     private boolean clear;
-    private List<SessionEntity> roadmap;
+    private List<SessionDTO> sessionList;
 }
+

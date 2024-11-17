@@ -1,7 +1,10 @@
 package com.sketch.roadmap;
 
+import com.sketch.user.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
+
 public interface RoadmapRepository extends JpaRepository<RoadmapEntity, Long> {
-    // Additional query methods can be added here if needed
+    List<RoadmapEntity> findByUser(UserEntity user);
 }

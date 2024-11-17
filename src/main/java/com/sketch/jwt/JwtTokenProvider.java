@@ -1,5 +1,6 @@
 package com.sketch.jwt;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -60,5 +61,16 @@ public class JwtTokenProvider {
                 .parseClaimsJws(token)
                 .getBody()
                 .getExpiration();
+    }
+    public String extractUsername(String token) {
+        return getClaims(token).getSubject();
+    }
+
+    private Claims getClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(SECRET_KEY) // Key 객체를 사용
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 }

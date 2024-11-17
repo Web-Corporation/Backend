@@ -1,8 +1,13 @@
 package com.sketch.roadmap;
 
-import com.sketch.jwt.TokenInfo;
-import com.sketch.user.UserLoginDTO;
+import java.util.List;
 
 public interface RoadmapService {
-    boolean checkToken(String token);
+    void saveRoadmap(RoadmapDTO roadmapDTO, String username);
+    List<RoadmapDTO> getAllRoadmaps(String username);
+    boolean isTokenValid(String accessToken);
+    void deleteRoadmap(Long roadmapId, String username);
+
+    // JWT 토큰에서 사용자 이름 추출
+    String extractUsername(String accessToken);
 }

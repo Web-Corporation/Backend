@@ -1,12 +1,14 @@
 package com.sketch.roadmap;
 import com.sketch.jwt.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Primary
 public class RoadmapServiceImpl implements RoadmapService {
 
     private final RoadmapRepository roadmapRepository;
@@ -23,8 +25,6 @@ public class RoadmapServiceImpl implements RoadmapService {
         // DTO -> Entity 변환
         RoadmapEntity roadmapEntity = new RoadmapEntity();
         roadmapEntity.setUsername(roadmapDTO.getUsername());
-        roadmapEntity.setAccessToken(roadmapDTO.getAccessToken());
-        roadmapEntity.setProfile(roadmapDTO.getProfile());
         roadmapEntity.setAchieved(roadmapDTO.getAchieved());
         roadmapEntity.setClear(roadmapDTO.isClear());
         roadmapEntity.setSessionData(roadmapDTO.getSessionData()); // JSON 문자열 저장
@@ -62,8 +62,6 @@ public class RoadmapServiceImpl implements RoadmapService {
     private RoadmapDTO convertToDTO(RoadmapEntity roadmapEntity) {
         RoadmapDTO roadmapDTO = new RoadmapDTO();
         roadmapDTO.setUsername(roadmapEntity.getUsername());
-        roadmapDTO.setAccessToken(roadmapEntity.getAccessToken());
-        roadmapDTO.setProfile(roadmapEntity.getProfile());
         roadmapDTO.setAchieved(roadmapEntity.getAchieved());
         roadmapDTO.setClear(roadmapEntity.isClear());
         roadmapDTO.setSessionData(roadmapEntity.getSessionData()); // JSON 데이터를 그대로 전달

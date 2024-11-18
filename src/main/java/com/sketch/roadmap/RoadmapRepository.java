@@ -5,6 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface RoadmapRepository extends JpaRepository<RoadmapEntity, Long> {
-    List<RoadmapEntity> findByUsername(String username); // UserEntity -> String으로 변경
+    List<RoadmapEntity> findByUsername(String username);
 }
 

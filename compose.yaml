@@ -5,7 +5,7 @@ services:
       context: .                    # Spring Boot Dockerfile 경로
       dockerfile: Dockerfile        # Spring Boot Dockerfile 파일명
     ports:
-      - "8080:8080"                 # Spring Boot 서버 포트 매핑
+      - "8081:8081"                 # Spring Boot 서버 포트 매핑
     depends_on:
       - python-service              # Python 서비스가 먼저 실행됨
 

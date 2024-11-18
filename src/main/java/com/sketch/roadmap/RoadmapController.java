@@ -83,6 +83,7 @@ public class RoadmapController {
         return ResponseEntity.ok(roadmaps);
     }
 
+    //로드맵 수정
     @PutMapping("/update")
     public ResponseEntity<String> updateRoadmap(
             @RequestHeader("Authorization") String accessToken,

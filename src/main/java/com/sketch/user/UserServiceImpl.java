@@ -3,34 +3,32 @@ package com.sketch.user;
 import com.sketch.jwt.JwtTokenProvider;
 import com.sketch.jwt.TokenInfo;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
-
 @Service
+@Primary
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
-    private final RedisTemplate<String, String> redisTemplate;
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository,
                            PasswordEncoder passwordEncoder,
-                           JwtTokenProvider jwtTokenProvider,
-                           RedisTemplate<String, String> redisTemplate) {
+                           JwtTokenProvider jwtTokenProvider) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
-        this.redisTemplate = redisTemplate;
     }
 
     @Override
     public void registerUser(UserSaveDTO userSaveDTO) {
+        if (userRepository.findByUsername(userSaveDTO.getUsername()).isPresent()) {
+            throw new IllegalArgumentException("Username already exists");
+        }
         UserEntity user = new UserEntity();
         user.setUsername(userSaveDTO.getUsername());
         user.setPassword(passwordEncoder.encode(userSaveDTO.getPassword()));
@@ -40,7 +38,13 @@ public class UserServiceImpl implements UserService {
     @Override
     public TokenInfo loginUser(UserLoginDTO userLoginDTO) {
         return userRepository.findByUsername(userLoginDTO.getUsername())
-                .filter(user -> passwordEncoder.matches(userLoginDTO.getPassword(), user.getPassword()))
+                .filter(user -> {
+                    boolean matches = passwordEncoder.matches(userLoginDTO.getPassword(), user.getPassword());
+                    if (!matches) {
+                        System.out.println("Password does not match for user: " + userLoginDTO.getUsername());
+                    }
+                    return matches;
+                })
                 .map(user -> {
                     String accessToken = jwtTokenProvider.generateAccessToken(user.getUsername());
                     String refreshToken = jwtTokenProvider.generateRefreshToken(user.getUsername());
@@ -51,20 +55,12 @@ public class UserServiceImpl implements UserService {
                             .refreshToken(refreshToken)
                             .build();
                 })
-                .orElse(null); // 인증 실패 시 null 반환
+                .orElse(null);
     }
 
     @Override
     public boolean logoutUser(String accessToken) {
-        // 토큰 유효성 확인
-        if (jwtTokenProvider.validateToken(accessToken)) {
-            Date expirationDate = jwtTokenProvider.getExpirationDate(accessToken);
-            long expirationInMillis = expirationDate.getTime() - System.currentTimeMillis();
-
-            // Redis에 토큰 블랙리스트로 저장
-            redisTemplate.opsForValue().set(accessToken, "logout", expirationInMillis, TimeUnit.MILLISECONDS);
-            return true;
-        }
-        return false;
+        // JWT가 유효한지만 확인
+        return jwtTokenProvider.validateToken(accessToken);
     }
 }

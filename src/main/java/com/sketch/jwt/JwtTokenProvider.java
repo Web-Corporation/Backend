@@ -27,6 +27,7 @@ public class JwtTokenProvider {
         this.SECRET_KEY = Keys.hmacShaKeyFor(secretKey.getBytes());
     }
 
+    // 액세스 토큰 생성 (권한 포함)
     public String generateAccessToken(String username) {
         return Jwts.builder()
                 .setSubject(username)
@@ -36,6 +37,7 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    // 리프레시 토큰 생성
     public String generateRefreshToken(String username) {
         return Jwts.builder()
                 .setSubject(username)
@@ -45,6 +47,7 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    // 토큰 유효성 검증
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(SECRET_KEY).build().parseClaimsJws(token);
@@ -54,23 +57,14 @@ public class JwtTokenProvider {
         }
     }
 
-    public Date getExpirationDate(String token) {
+    // 사용자 이름 추출
+    public String extractUsername(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(SECRET_KEY)
                 .build()
                 .parseClaimsJws(token)
                 .getBody()
-                .getExpiration();
-    }
-    public String extractUsername(String token) {
-        return getClaims(token).getSubject();
+                .getSubject();
     }
 
-    private Claims getClaims(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(SECRET_KEY) // Key 객체를 사용
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-    }
 }

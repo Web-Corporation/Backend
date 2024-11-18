@@ -29,11 +29,13 @@ public class UserServiceImpl implements UserService {
         if (userRepository.findByUsername(userSaveDTO.getUsername()).isPresent()) {
             throw new IllegalArgumentException("Username already exists");
         }
+
         UserEntity user = new UserEntity();
         user.setUsername(userSaveDTO.getUsername());
         user.setPassword(passwordEncoder.encode(userSaveDTO.getPassword()));
         userRepository.save(user);
     }
+
 
     @Override
     public TokenInfo loginUser(UserLoginDTO userLoginDTO) {

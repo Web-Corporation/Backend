@@ -10,11 +10,6 @@ import org.springframework.web.client.RestTemplate;
 public class AppConfig {
 
     @Bean
-    public PasswordEncoder passwordEncoder(){
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
     public RestTemplate restTemplate() {
         return new RestTemplate();
     }

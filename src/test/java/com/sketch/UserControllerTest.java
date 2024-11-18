@@ -43,6 +43,7 @@ public class UserControllerTest {
         UserEntity user = new UserEntity();
         user.setUsername("testUser");
         user.setPassword(passwordEncoder.encode("testPassword"));
+        System.out.println(user.getPassword());
         userRepository.save(user);
         validToken = jwtTokenProvider.generateAccessToken("testUser");
     }

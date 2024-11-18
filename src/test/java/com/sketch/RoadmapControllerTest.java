@@ -57,14 +57,14 @@ public class RoadmapControllerTest {
         validToken = jwtTokenProvider.generateAccessToken(user.getUsername());
     }
 
-//    @Test
-//    public void testCreateRoadmapSuccess() throws Exception {
-//        mockMvc.perform(get("/roadmap/createroadmap")
-//                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + validToken)
-//                        .param("topic", "Java"))
-//                .andExpect(status().isOk())
-//                .andExpect(jsonPath("$.sessionData").exists());
-//    }
+    @Test
+    public void testCreateRoadmapSuccess() throws Exception {
+        mockMvc.perform(get("/roadmap/createroadmap")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + validToken)
+                        .param("topic", "Java"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sessionData").exists());
+    }
 
     @Test
     public void testCreateRoadmapUnauthorized() throws Exception {

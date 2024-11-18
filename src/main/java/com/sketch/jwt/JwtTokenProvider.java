@@ -1,6 +1,5 @@
 package com.sketch.jwt;
 
-import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -29,12 +28,17 @@ public class JwtTokenProvider {
 
     // 액세스 토큰 생성 (권한 포함)
     public String generateAccessToken(String username) {
-        return Jwts.builder()
-                .setSubject(username)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRATION))
-                .signWith(SECRET_KEY, SignatureAlgorithm.HS512)
-                .compact();
+        try {
+            return Jwts.builder()
+                    .setSubject(username)
+                    .setIssuedAt(new Date())
+                    .setExpiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRATION))
+                    .signWith(SECRET_KEY, SignatureAlgorithm.HS512)
+                    .compact();
+        } catch (Exception e) {
+            System.out.println("Error generating JWT: " + e.getMessage());
+            return null;
+        }
     }
 
     // 리프레시 토큰 생성
@@ -53,6 +57,7 @@ public class JwtTokenProvider {
             Jwts.parserBuilder().setSigningKey(SECRET_KEY).build().parseClaimsJws(token);
             return true;
         } catch (Exception e) {
+            System.out.println("Token validation failed: " + e.getMessage());
             return false;
         }
     }

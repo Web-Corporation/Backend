@@ -1,11 +1,7 @@
 package com.sketch;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sketch.jwt.JwtTokenProvider;
-import com.sketch.user.UserEntity;
-import com.sketch.user.UserLoginDTO;
-import com.sketch.user.UserRepository;
-import com.sketch.user.UserSaveDTO;
+import com.sketch.user.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +11,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -39,9 +34,11 @@ public class UserControllerTest {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
+    private String validToken;
+
     @BeforeEach
     public void setup() {
-        // 테스트 사용자 초기화
+        // 데이터 초기화
         userRepository.deleteAll();
         UserEntity user = new UserEntity();
         user.setUsername("testUser");
@@ -50,11 +47,8 @@ public class UserControllerTest {
         validToken = jwtTokenProvider.generateAccessToken("testUser");
     }
 
-    private String validToken;
-
     @Test
-    public void testRegisterUser() throws Exception {
-        // 회원가입 요청 데이터
+    public void testRegisterUserSuccess() throws Exception {
         UserSaveDTO userSaveDTO = new UserSaveDTO();
         userSaveDTO.setUsername("newUser");
         userSaveDTO.setPassword("newPassword");
@@ -67,24 +61,46 @@ public class UserControllerTest {
     }
 
     @Test
-    public void testLoginUser() throws Exception {
-        // 로그인 요청 데이터
-        UserLoginDTO loginRequest = new UserLoginDTO();
-        loginRequest.setUsername("testUser");
-        loginRequest.setPassword("testPassword");
+    public void testRegisterUserConflict() throws Exception {
+        UserSaveDTO userSaveDTO = new UserSaveDTO();
+        userSaveDTO.setUsername("testUser"); // 이미 존재하는 사용자
+        userSaveDTO.setPassword("newPassword");
 
-        ResultActions result = mockMvc.perform(post("/users/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(loginRequest)));
-
-        result.andExpect(status().isOk())
-                .andExpect(jsonPath("$.accessToken").exists())
-                .andExpect(jsonPath("$.refreshToken").exists());
+        mockMvc.perform(post("/users/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userSaveDTO)))
+                .andExpect(status().isConflict())
+                .andExpect(content().string("Username already exists"));
     }
 
     @Test
-    public void testLogoutUser() throws Exception {
-        // 유효한 토큰으로 로그아웃 요청
+    public void testLoginUserSuccess() throws Exception {
+        UserLoginDTO loginRequest = new UserLoginDTO();
+        loginRequest.setUsername("testUser");
+        loginRequest.setPassword("testPassword"); // setup()에서 사용한 비밀번호와 동일해야 함
+
+        mockMvc.perform(post("/users/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().isOk()) // 성공적으로 로그인
+                .andExpect(jsonPath("$.accessToken").exists()) // accessToken 반환
+                .andExpect(jsonPath("$.refreshToken").exists()); // refreshToken 반환
+    }
+
+    @Test
+    public void testLoginUserUnauthorized() throws Exception {
+        UserLoginDTO loginRequest = new UserLoginDTO();
+        loginRequest.setUsername("testUser");
+        loginRequest.setPassword("wrongPassword"); // 잘못된 비밀번호
+
+        mockMvc.perform(post("/users/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    public void testLogoutUserSuccess() throws Exception {
         mockMvc.perform(post("/users/logout")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + validToken))
                 .andExpect(status().isOk())
@@ -92,8 +108,7 @@ public class UserControllerTest {
     }
 
     @Test
-    public void testLogoutWithInvalidToken() throws Exception {
-        // 잘못된 토큰으로 로그아웃 요청
+    public void testLogoutUserUnauthorized() throws Exception {
         mockMvc.perform(post("/users/logout")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer invalidToken"))
                 .andExpect(status().isUnauthorized());
@@ -101,7 +116,6 @@ public class UserControllerTest {
 
     @Test
     public void testLogoutWithoutToken() throws Exception {
-        // 토큰 없이 로그아웃 요청
         mockMvc.perform(post("/users/logout"))
                 .andExpect(status().isUnauthorized());
     }

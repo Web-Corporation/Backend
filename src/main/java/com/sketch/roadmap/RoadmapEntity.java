@@ -3,28 +3,31 @@ package com.sketch.roadmap;
 import com.sketch.user.UserEntity;
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
-@Entity
 @Data
-@NoArgsConstructor
+@Entity
+@Table(name = "roadmap_entity") // 테이블 이름을 roadmaps로 설정
 public class RoadmapEntity {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long roadmapId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // 자동 증가
+    private Long roadmapId; // 로드맵 ID
 
-    @ManyToOne
-    @JoinColumn(name="user_id",nullable = false)
-    private UserEntity userEntity;
+    @ManyToOne(fetch = FetchType.LAZY) // 다대일 관계
+    @JoinColumn(name = "user_id", nullable = false) // 외래 키 설정
+    private UserEntity userEntity; // 연결된 사용자 엔티티
 
-    private String username; // 로드맵과 연결된 사용자 이름
+    @Column(nullable = false) // 로드맵과 연결된 사용자 이름
+    private String username;
 
+    @Column(nullable = false) // 로드맵 진행률
     private int achieved;
 
+    @Column(nullable = false) // 로드맵 완료 여부
     private boolean clear;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
-    @Lob
-    private String sessionData; // Flask 서버의 JSON 응답을 문자열로 저장
+    @Lob // 대량 데이터 저장
+    @Column(nullable = false, columnDefinition = "TEXT") // Flask 서버의 JSON 응답 저장
+    private String sessionData;
 }
 

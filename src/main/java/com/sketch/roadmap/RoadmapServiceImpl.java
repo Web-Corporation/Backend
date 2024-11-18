@@ -1,8 +1,10 @@
 package com.sketch.roadmap;
 import com.sketch.jwt.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -13,11 +15,27 @@ public class RoadmapServiceImpl implements RoadmapService {
 
     private final RoadmapRepository roadmapRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final RestTemplate restTemplate;
+
+    @Value("${PYTHON_SERVICE_URL}")
+    private String flaskServiceUrl;
 
     @Autowired
-    public RoadmapServiceImpl(RoadmapRepository roadmapRepository, JwtTokenProvider jwtTokenProvider) {
+    public RoadmapServiceImpl(RoadmapRepository roadmapRepository, JwtTokenProvider jwtTokenProvider, RestTemplate restTemplate) {
         this.roadmapRepository = roadmapRepository;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.restTemplate = restTemplate;
+    }
+
+    @Override
+    public String createRoadmap(String topic, String accessToken) {
+        String flaskUrl = flaskServiceUrl + "/createroadmap?topic=" + topic;
+
+        try {
+            return restTemplate.getForObject(flaskUrl, String.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to communicate with Flask service: " + e.getMessage());
+        }
     }
 
     @Override
@@ -30,6 +48,21 @@ public class RoadmapServiceImpl implements RoadmapService {
         roadmapEntity.setSessionData(roadmapDTO.getSessionData()); // JSON 문자열 저장
 
         roadmapRepository.save(roadmapEntity);
+    }
+
+    @Override
+    public RoadmapDTO getRoadmap(Long roadmapID) {
+        return roadmapRepository.findById(roadmapID)
+                .map(roadmapEntity -> {
+                    // Entity를 DTO로 변환
+                    RoadmapDTO roadmapDTO = new RoadmapDTO();
+                    roadmapDTO.setUsername(roadmapEntity.getUsername());
+                    roadmapDTO.setAchieved(roadmapEntity.getAchieved());
+                    roadmapDTO.setClear(roadmapEntity.isClear());
+                    roadmapDTO.setSessionData(roadmapEntity.getSessionData());
+                    return roadmapDTO;
+                })
+                .orElse(null); // 해당 ID가 없으면 null 반환
     }
 
     @Override
@@ -68,8 +101,4 @@ public class RoadmapServiceImpl implements RoadmapService {
         return roadmapDTO;
     }
 
-    @Override
-    public String extractUsername(String accessToken) {
-        return jwtTokenProvider.extractUsername(accessToken);
-    }
 }

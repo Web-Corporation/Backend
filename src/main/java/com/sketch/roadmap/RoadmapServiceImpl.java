@@ -1,4 +1,5 @@
 package com.sketch.roadmap;
+
 import com.sketch.user.UserEntity;
 import com.sketch.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,61 +14,62 @@ import java.util.stream.Collectors;
 @Service
 @Primary
 public class RoadmapServiceImpl implements RoadmapService {
-    private final UserRepository userRepository;
+
     private final RoadmapRepository roadmapRepository;
+    private final UserRepository userRepository;
     private final RestTemplate restTemplate;
 
     @Value("${PYTHON_SERVICE_URL}")
     private String flaskServiceUrl;
 
     @Autowired
-    public RoadmapServiceImpl(UserRepository userRepository, RoadmapRepository roadmapRepository, RestTemplate restTemplate) {
-        this.userRepository = userRepository;
+    public RoadmapServiceImpl(RoadmapRepository roadmapRepository,
+                              UserRepository userRepository,
+                              RestTemplate restTemplate) {
         this.roadmapRepository = roadmapRepository;
+        this.userRepository = userRepository;
         this.restTemplate = restTemplate;
     }
 
     @Override
-    public String createRoadmap(String topic, String accessToken) {
+    public RoadmapDTO createRoadmap(String topic, String accessToken) {
         String flaskUrl = flaskServiceUrl + "/createroadmap?topic=" + topic;
-
         try {
-            return restTemplate.getForObject(flaskUrl, String.class);
+            String flaskResponse = restTemplate.getForObject(flaskUrl, String.class);
+            RoadmapDTO roadmapDTO = new RoadmapDTO();
+            roadmapDTO.setSessionData(flaskResponse);
+            return roadmapDTO;
         } catch (Exception e) {
             throw new RuntimeException("Failed to communicate with Flask service: " + e.getMessage());
         }
     }
 
     @Override
-    public void saveRoadmap(RoadmapDTO roadmapDTO) {
-        // 사용자 엔티티 가져오기
-        UserEntity userEntity = userRepository.findByUsername(roadmapDTO.getUsername())
+    public void saveRoadmap(RoadmapDTO roadmapDTO, String username) {
+        UserEntity userEntity = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // DTO -> Entity 변환
         RoadmapEntity roadmapEntity = new RoadmapEntity();
-        roadmapEntity.setUserEntity(userEntity); // 연관관계 설정
-        roadmapEntity.setUsername(roadmapDTO.getUsername());
+        roadmapEntity.setUserEntity(userEntity);
+        roadmapEntity.setSessionData(roadmapDTO.getSessionData());
         roadmapEntity.setAchieved(roadmapDTO.getAchieved());
         roadmapEntity.setClear(roadmapDTO.isClear());
-        roadmapEntity.setSessionData(roadmapDTO.getSessionData());
 
         roadmapRepository.save(roadmapEntity);
+    }
+
+    @Override
+    public List<RoadmapDTO> getAllRoadmaps(String username) {
+        return roadmapRepository.findByUserEntityUsername(username).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
     public RoadmapDTO getRoadmap(Long roadmapID) {
         return roadmapRepository.findById(roadmapID)
                 .map(this::convertToDTO)
-                .orElse(null);
-    }
-
-    @Override
-    public List<RoadmapDTO> getAllRoadmaps(String username) {
-        // 사용자의 모든 로드맵 조회 및 변환
-        return roadmapRepository.findByUsername(username).stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+                .orElseThrow(() -> new RuntimeException("Roadmap not found"));
     }
 
     @Override
@@ -75,7 +77,6 @@ public class RoadmapServiceImpl implements RoadmapService {
         RoadmapEntity roadmapEntity = roadmapRepository.findById(roadmapId)
                 .orElseThrow(() -> new RuntimeException("Roadmap not found"));
 
-        // 사용자 권한 확인
         if (!roadmapEntity.getUserEntity().getUsername().equals(username)) {
             throw new RuntimeException("Unauthorized access to roadmap");
         }
@@ -85,11 +86,10 @@ public class RoadmapServiceImpl implements RoadmapService {
 
     private RoadmapDTO convertToDTO(RoadmapEntity roadmapEntity) {
         RoadmapDTO roadmapDTO = new RoadmapDTO();
-        roadmapDTO.setUsername(roadmapEntity.getUsername());
         roadmapDTO.setAchieved(roadmapEntity.getAchieved());
         roadmapDTO.setClear(roadmapEntity.isClear());
-        roadmapDTO.setSessionData(roadmapEntity.getSessionData()); // JSON 데이터를 그대로 전달
+        roadmapDTO.setSessionData(roadmapEntity.getSessionData());
+        roadmapDTO.setRoadmapId(roadmapEntity.getRoadmapId());
         return roadmapDTO;
     }
-
 }

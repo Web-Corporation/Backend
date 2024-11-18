@@ -13,12 +13,9 @@ public class RoadmapEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY) // 자동 증가
     private Long roadmapId; // 로드맵 ID
 
-    @ManyToOne// 다대일 관계
+    @ManyToOne // 다대일 관계
     @JoinColumn(name = "user_id", nullable = false) // 외래 키 설정
     private UserEntity userEntity; // 연결된 사용자 엔티티
-
-    @Column(nullable = false) // 로드맵과 연결된 사용자 이름
-    private String username;
 
     @Column(nullable = false) // 로드맵 진행률
     private int achieved;
@@ -30,4 +27,3 @@ public class RoadmapEntity {
     @Column(nullable = false, columnDefinition = "TEXT") // Flask 서버의 JSON 응답 저장
     private String sessionData;
 }
-

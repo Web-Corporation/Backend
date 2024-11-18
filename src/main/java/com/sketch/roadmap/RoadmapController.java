@@ -1,9 +1,9 @@
 package com.sketch.roadmap;
 
+import com.sketch.jwt.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,67 +13,67 @@ import java.util.List;
 public class RoadmapController {
 
     private final RoadmapService roadmapService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Autowired
-    public RoadmapController(RoadmapService roadmapService) {
+    public RoadmapController(RoadmapService roadmapService, JwtTokenProvider jwtTokenProvider) {
         this.roadmapService = roadmapService;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     @GetMapping("/createroadmap")
-    public ResponseEntity<String> createRoadmap(@RequestHeader("Authorization") String accessToken,
-                                                @RequestParam String topic) {
+    public ResponseEntity<RoadmapDTO> createRoadmap(@RequestHeader("Authorization") String accessToken,
+                                                    @RequestParam String topic) {
         try {
-            String roadmap = roadmapService.createRoadmap(topic, accessToken);
-            return ResponseEntity.ok(roadmap);
+            RoadmapDTO roadmapDTO = roadmapService.createRoadmap(topic, accessToken);
+            return ResponseEntity.ok(roadmapDTO);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    @PostMapping("/saveroadmap")
+    public ResponseEntity<String> saveRoadmap(@RequestBody RoadmapDTO roadmapDTO,
+                                              @RequestHeader("Authorization") String accessToken) {
+        try {
+            String username = jwtTokenProvider.extractUsername(accessToken.replace("Bearer ", ""));
+            roadmapService.saveRoadmap(roadmapDTO, username);
+            return ResponseEntity.status(HttpStatus.CREATED).body("Roadmap saved successfully");
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
 
-    //로드맵 저장
-    @PostMapping("/saveroadmap")
-    public ResponseEntity<String> saveRoadmap(@RequestBody RoadmapDTO roadmapDTO) {
-        String username = getCurrentUsername(); // 현재 사용자 정보 추출
-        roadmapDTO.setUsername(username);
-        roadmapService.saveRoadmap(roadmapDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body("Roadmap saved successfully");
+    @GetMapping("/getallroadmaps")
+    public ResponseEntity<List<RoadmapDTO>> getAllRoadmaps(@RequestHeader("Authorization") String accessToken) {
+        try {
+            String username = jwtTokenProvider.extractUsername(accessToken.replace("Bearer ", ""));
+            List<RoadmapDTO> roadmaps = roadmapService.getAllRoadmaps(username);
+            return ResponseEntity.ok(roadmaps);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
     }
 
-    //로드맵 단일 조회
     @GetMapping("/getroadmap")
     public ResponseEntity<RoadmapDTO> getRoadmap(@RequestParam("roadmapID") Long roadmapID) {
-        RoadmapDTO roadmap = roadmapService.getRoadmap(roadmapID);
-        return roadmap != null
-                ? ResponseEntity.ok(roadmap)
-                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        try {
+            RoadmapDTO roadmapDTO = roadmapService.getRoadmap(roadmapID);
+            return ResponseEntity.ok(roadmapDTO);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
     }
 
-    //사용자 전체 로드맵 조회
-    @GetMapping("/getallroadmap")
-    public ResponseEntity<List<RoadmapDTO>> getAllRoadmaps() {
-        String username = getCurrentUsername(); // 현재 사용자 정보 추출
-        List<RoadmapDTO> roadmaps = roadmapService.getAllRoadmaps(username);
-        return ResponseEntity.ok(roadmaps);
-    }
-
-    //로드맵 수정
-    @PutMapping("/updateroadmap")
-    public ResponseEntity<String> updateRoadmap(@RequestBody RoadmapDTO roadmapDTO) {
-        roadmapService.saveRoadmap(roadmapDTO);
-        return ResponseEntity.ok("Roadmap updated successfully");
-    }
-
-
-     //로드맵 삭제
     @DeleteMapping("/delete/{roadmapId}")
-    public ResponseEntity<String> deleteRoadmap(@PathVariable("roadmapId") Long roadmapId) {
-        String username = getCurrentUsername(); // 현재 사용자 정보 추출
-        roadmapService.deleteRoadmap(roadmapId, username);
-        return ResponseEntity.ok("Roadmap deleted successfully");
-    }
-
-     //현재 사용자 이름 추출
-    private String getCurrentUsername() {
-        return SecurityContextHolder.getContext().getAuthentication().getName();
+    public ResponseEntity<String> deleteRoadmap(@PathVariable("roadmapId") Long roadmapId,
+                                                @RequestHeader("Authorization") String accessToken) {
+        try {
+            String username = jwtTokenProvider.extractUsername(accessToken.replace("Bearer ", ""));
+            roadmapService.deleteRoadmap(roadmapId, username);
+            return ResponseEntity.ok("Roadmap deleted successfully");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
 }

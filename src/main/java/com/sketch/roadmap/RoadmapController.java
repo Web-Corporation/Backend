@@ -4,6 +4,7 @@ import com.sketch.jwt.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,6 +33,7 @@ public class RoadmapController {
         }
     }
 
+    // 로드맵 저장
     @PostMapping("/saveroadmap")
     public ResponseEntity<String> saveRoadmap(@RequestBody RoadmapDTO roadmapDTO,
                                               @RequestHeader("Authorization") String accessToken) {
@@ -43,6 +45,24 @@ public class RoadmapController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
+
+    // 로드맵 수정
+    @PutMapping("/updateroadmap")
+    public ResponseEntity<String> updateRoadmap(@RequestBody RoadmapDTO roadmapDTO,
+                                                @RequestHeader("Authorization") String accessToken) {
+        try {
+            String username = jwtTokenProvider.extractUsername(accessToken.replace("Bearer ", ""));
+            roadmapService.updateRoadmap(roadmapDTO, username);
+            return ResponseEntity.ok("Roadmap updated successfully");
+        } catch (AccessDeniedException e) {
+            // 권한이 없을 경우 처리
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        } catch (RuntimeException e) {
+            // 기타 예외 처리
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
 
     @GetMapping("/getallroadmaps")
     public ResponseEntity<List<RoadmapDTO>> getAllRoadmaps(@RequestHeader("Authorization") String accessToken) {

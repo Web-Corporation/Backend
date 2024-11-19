@@ -34,18 +34,25 @@ public class UserControllerTest {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
+    @Autowired
+    private TokenBlacklistService tokenBlacklistService;
+
     private String validToken;
 
     @BeforeEach
     public void setup() {
-        // 데이터 초기화
+        // 1. 사용자 초기화
         userRepository.deleteAll();
         UserEntity user = new UserEntity();
         user.setUsername("testUser");
         user.setPassword(passwordEncoder.encode("testPassword"));
-        System.out.println(user.getPassword());
         userRepository.save(user);
+
+        // 2. 유효한 토큰 생성
         validToken = jwtTokenProvider.generateAccessToken("testUser");
+
+        // 3. 블랙리스트 초기화
+        tokenBlacklistService.clearBlacklist(); // 전체 블랙리스트 초기화
     }
 
     @Test
@@ -101,23 +108,28 @@ public class UserControllerTest {
     }
 
     @Test
-    public void testLogoutUserSuccess() throws Exception {
+    public void testLogoutSuccess() throws Exception {
         mockMvc.perform(post("/users/logout")
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + validToken))
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + validToken)
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Logout successful"));
+                .andExpect(content().string("Logged out successfully"));
     }
 
     @Test
-    public void testLogoutUserUnauthorized() throws Exception {
+    public void testLogoutUnauthorizedInvalidToken() throws Exception {
+        String invalidToken = "invalid.token.example";
         mockMvc.perform(post("/users/logout")
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer invalidToken"))
-                .andExpect(status().isUnauthorized());
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + invalidToken)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().string("Invalid token"));
     }
 
     @Test
-    public void testLogoutWithoutToken() throws Exception {
-        mockMvc.perform(post("/users/logout"))
+    public void testLogoutNoToken() throws Exception {
+        mockMvc.perform(post("/users/logout")
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }
 }

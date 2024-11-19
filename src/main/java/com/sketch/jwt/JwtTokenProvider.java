@@ -57,7 +57,7 @@ public class JwtTokenProvider {
             Jwts.parserBuilder().setSigningKey(SECRET_KEY).build().parseClaimsJws(token);
             return true;
         } catch (Exception e) {
-            System.out.println("Token validation failed: " + e.getMessage());
+            //System.out.println("Token validation failed: " + e.getMessage());
             return false;
         }
     }
@@ -70,6 +70,17 @@ public class JwtTokenProvider {
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject();
+    }
+
+    //토큰의 만료 시간 반환
+    public long getExpiration(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(SECRET_KEY)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getExpiration()
+                .getTime();
     }
 
 }

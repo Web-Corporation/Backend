@@ -8,9 +8,13 @@ services:
       - "8081:8081"                 # Spring Boot 서버 포트 매핑
     depends_on:
       - python-service              # Python 서비스가 먼저 실행됨
+      - db-service
 
     environment:
       - PYTHON_SERVICE_URL=http://python-service:5000 # Python 서비스의 URL
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db-service:3306/mydatabase # DB URL
+      - SPRING_DATASOURCE_USERNAME=root # DB 사용자명
+      - SPRING_DATASOURCE_PASSWORD=Dd905925@ # DB 비밀번호
 
   python-service:
     build:
@@ -20,3 +24,16 @@ services:
       - "5001:5000"                 # 호스트의 5001 포트를 Flask 컨테이너의 5000 포트에 매핑
     environment:
       - OPENAI_API_KEY=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
+
+  db-service:
+    image: mysql:8.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=Dd905925@
+      - MYSQL_DATABASE=sketch_db
+    ports:
+      - "3306:3306"                 # DB 컨테이너를 호스트의 3306 포트에 매핑
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:

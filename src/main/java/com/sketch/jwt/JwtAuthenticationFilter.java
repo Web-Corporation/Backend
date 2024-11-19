@@ -1,5 +1,5 @@
 package com.sketch.jwt;
-
+import com.sketch.TokenBlacklistService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,12 +18,12 @@ import java.util.ArrayList;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final TokenBlacklistService tokenBlacklistService;
 
-
-    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider) {
+    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, TokenBlacklistService tokenBlacklistService) {
         this.jwtTokenProvider = jwtTokenProvider;
+        this.tokenBlacklistService = tokenBlacklistService;
     }
-
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -37,33 +37,35 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Authorization 헤더가 없거나 잘못된 경우
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401 상태 반환
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
 
-        String token = authHeader.substring(7); // "Bearer " 제거
+        String token = authHeader.substring(7);
 
-        // JWT 유효성 검증 실패 시 401 반환
         if (!jwtTokenProvider.validateToken(token)) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401 상태 반환
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Invalid token");
             return;
         }
 
-        // JWT가 유효하다면 SecurityContext 설정
+        if (tokenBlacklistService.isBlacklisted(token)) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN); // 403 상태 반환
+            response.getWriter().write("Token has been blacklisted");
+            return;
+        }
+
         String username = jwtTokenProvider.extractUsername(token);
         UserDetails userDetails = User.withUsername(username)
-                .password("") // 비밀번호 필요 없음
-                .authorities(new ArrayList<>()) // 권한 정보 없음
+                .password("")
+                .authorities(new ArrayList<>())
                 .build();
 
         UsernamePasswordAuthenticationToken authentication =
                 new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        // 필터 체인의 다음 단계로 요청 전달
         filterChain.doFilter(request, response);
     }
-
 }

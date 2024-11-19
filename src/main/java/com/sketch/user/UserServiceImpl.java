@@ -59,10 +59,4 @@ public class UserServiceImpl implements UserService {
                 })
                 .orElse(null);
     }
-
-    @Override
-    public boolean logoutUser(String accessToken) {
-        // JWT가 유효한지만 확인
-        return jwtTokenProvider.validateToken(accessToken);
-    }
 }

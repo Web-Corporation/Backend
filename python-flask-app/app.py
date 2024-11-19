@@ -1,4 +1,5 @@
 import os
+import json
 from flask import Flask, request, jsonify
 from datetime import datetime
 from langchain_openai import ChatOpenAI
@@ -81,14 +82,20 @@ class Model:
 
         user_input = self.input
         response = chain2.invoke({'user_input': f'"{user_input}"을(를) 공부하려면 어떻게 공부, 연습해야 할까?'})
-        return response
+        # 반환 데이터를 JSON 객체로 디코드
+        decoded_response = json.loads(response)
+        return decoded_response
 
 @app.route('/createroadmap', methods=['GET'])
 def generate_plan():
     topic = request.args.get("topic")
     model = Model(topic)
     result = model.answer()
-    return jsonify(result=result)
+    #return jsonify(result=result)
+    # Flask에서 JSON 응답 생성 (pretty-printed JSON)
+    response = jsonify(result)
+    response.headers['Content-Type'] = 'application/json; charset=utf-8'
+    return response
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)

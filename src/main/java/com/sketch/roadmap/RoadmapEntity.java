@@ -13,6 +13,9 @@ public class RoadmapEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY) // 자동 증가
     private Long roadmapId; // 로드맵 ID
 
+    @Column(nullable = false) //로드맵 이름
+    private String roadmapName;
+
     @ManyToOne // 다대일 관계
     @JoinColumn(name = "user_id", nullable = false) // 외래 키 설정
     private UserEntity userEntity; // 연결된 사용자 엔티티

@@ -37,22 +37,22 @@ public class UserControllerTest {
     @Autowired
     private TokenBlacklistService tokenBlacklistService;
 
+    private UserEntity testUser;
     private String validToken;
 
     @BeforeEach
     public void setup() {
-        // 1. 사용자 초기화
+        // 데이터 초기화
         userRepository.deleteAll();
-        UserEntity user = new UserEntity();
-        user.setUsername("testUser");
-        user.setPassword(passwordEncoder.encode("testPassword"));
-        userRepository.save(user);
+        tokenBlacklistService.clearBlacklist();
 
-        // 2. 유효한 토큰 생성
-        validToken = jwtTokenProvider.generateAccessToken("testUser");
-
-        // 3. 블랙리스트 초기화
-        tokenBlacklistService.clearBlacklist(); // 전체 블랙리스트 초기화
+        // 테스트 사용자 생성 (고유한 사용자명 사용)
+        testUser = new UserEntity();
+        testUser.setUsername("userTestUser" + System.currentTimeMillis());
+        testUser.setPassword(passwordEncoder.encode("testPassword"));
+        testUser = userRepository.save(testUser);
+        
+        validToken = jwtTokenProvider.generateAccessToken(testUser.getUsername());
     }
 
     @Test
@@ -71,7 +71,7 @@ public class UserControllerTest {
     @Test
     public void testRegisterUserConflict() throws Exception {
         UserSaveDTO userSaveDTO = new UserSaveDTO();
-        userSaveDTO.setUsername("testUser"); // 이미 존재하는 사용자
+        userSaveDTO.setUsername(testUser.getUsername()); // 기존 사용자명 사용
         userSaveDTO.setPassword("newPassword");
 
         mockMvc.perform(post("/users/register")
@@ -84,7 +84,7 @@ public class UserControllerTest {
     @Test
     public void testLoginUserSuccess() throws Exception {
         UserLoginDTO loginRequest = new UserLoginDTO();
-        loginRequest.setUsername("testUser");
+        loginRequest.setUsername(testUser.getUsername());
         loginRequest.setPassword("testPassword"); // setup()에서 사용한 비밀번호와 동일해야 함
 
         mockMvc.perform(post("/users/login")

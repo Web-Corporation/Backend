@@ -38,7 +38,10 @@ public class RoadmapServiceImpl implements RoadmapService {
         try {
             String flaskResponse = restTemplate.getForObject(flaskUrl, String.class);
             RoadmapDTO roadmapDTO = new RoadmapDTO();
+            roadmapDTO.setRoadmapName(topic);
             roadmapDTO.setSessionData(flaskResponse);
+            roadmapDTO.setAchieved(0);
+            roadmapDTO.setClear(false);
             return roadmapDTO;
         } catch (Exception e) {
             throw new RuntimeException("Failed to communicate with Flask service: " + e.getMessage());
@@ -52,6 +55,7 @@ public class RoadmapServiceImpl implements RoadmapService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         RoadmapEntity roadmapEntity = new RoadmapEntity();
+        roadmapEntity.setRoadmapName(roadmapDTO.getRoadmapName());
         roadmapEntity.setAchieved(roadmapDTO.getAchieved());
         roadmapEntity.setClear(roadmapDTO.isClear());
         roadmapEntity.setSessionData(roadmapDTO.getSessionData());
@@ -69,7 +73,7 @@ public class RoadmapServiceImpl implements RoadmapService {
         if (!roadmapEntity.getUserEntity().getUsername().equals(username)) {
             throw new AccessDeniedException("Unauthorized access to roadmap");
         }
-
+        roadmapEntity.setRoadmapName(roadmapDTO.getRoadmapName());
         roadmapEntity.setAchieved(roadmapDTO.getAchieved());
         roadmapEntity.setClear(roadmapDTO.isClear());
         roadmapEntity.setSessionData(roadmapDTO.getSessionData());
@@ -105,6 +109,7 @@ public class RoadmapServiceImpl implements RoadmapService {
 
     private RoadmapDTO convertToDTO(RoadmapEntity roadmapEntity) {
         RoadmapDTO roadmapDTO = new RoadmapDTO();
+        roadmapDTO.setRoadmapName(roadmapEntity.getRoadmapName());
         roadmapDTO.setAchieved(roadmapEntity.getAchieved());
         roadmapDTO.setClear(roadmapEntity.isClear());
         roadmapDTO.setSessionData(roadmapEntity.getSessionData());

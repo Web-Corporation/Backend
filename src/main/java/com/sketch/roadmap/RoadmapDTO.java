@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class RoadmapDTO {
     private Long roadmapId;
+    private String roadmapName;
     private UserEntity userEntity;
     private int achieved;
     private boolean clear;

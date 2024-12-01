@@ -72,7 +72,7 @@ public class RoadmapControllerTest {
 
     @Test
     public void testCreateRoadmapSuccess() throws Exception {
-        mockMvc.perform(get("/roadmap/createroadmap")
+        mockMvc.perform(get("/api/roadmap/createroadmap")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + validToken)
                 .param("topic", "Java"))
                 .andExpect(status().isOk())
@@ -82,7 +82,7 @@ public class RoadmapControllerTest {
 
     @Test
     public void testCreateRoadmapUnauthorized() throws Exception {
-        mockMvc.perform(get("/roadmap/createroadmap")
+        mockMvc.perform(get("/api/roadmap/createroadmap")
                 .param("topic", "Java"))
                 .andExpect(status().isUnauthorized());
     }
@@ -95,7 +95,7 @@ public class RoadmapControllerTest {
         roadmapDTO.setClear(false);
         roadmapDTO.setSessionData("{\"result\": \"test data\"}");
 
-        mockMvc.perform(post("/roadmap/saveroadmap")
+        mockMvc.perform(post("/api/roadmap/saveroadmap")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + validToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(roadmapDTO)))
@@ -126,7 +126,7 @@ public class RoadmapControllerTest {
         updatedRoadmapDTO.setClear(true);
         updatedRoadmapDTO.setSessionData("{\"result\": \"updated data\"}");
 
-        mockMvc.perform(put("/roadmap/updateroadmap")
+        mockMvc.perform(put("/api/roadmap/updateroadmap")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + validToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updatedRoadmapDTO)))
@@ -151,7 +151,7 @@ public class RoadmapControllerTest {
         roadmap.setSessionData("{\"result\": \"test data\"}");
         roadmapRepository.save(roadmap);
 
-        mockMvc.perform(get("/roadmap/getallroadmaps")
+        mockMvc.perform(get("/api/roadmap/getallroadmaps")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + validToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].roadmapName").value("Test Roadmap"))
@@ -171,7 +171,7 @@ public class RoadmapControllerTest {
         roadmap.setSessionData("{\"result\": \"test data\"}");
         roadmap = roadmapRepository.save(roadmap);
 
-        mockMvc.perform(delete("/roadmap/delete/" + roadmap.getRoadmapId())
+        mockMvc.perform(delete("/api/roadmap/delete/" + roadmap.getRoadmapId())
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + validToken))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Roadmap deleted successfully"));
@@ -188,7 +188,7 @@ public class RoadmapControllerTest {
         nonExistentRoadmapDTO.setClear(false);
         nonExistentRoadmapDTO.setSessionData("{\"result\": \"test data\"}");
 
-        mockMvc.perform(put("/roadmap/updateroadmap")
+        mockMvc.perform(put("/api/roadmap/updateroadmap")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + validToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(nonExistentRoadmapDTO)))
@@ -198,7 +198,7 @@ public class RoadmapControllerTest {
 
     @Test
     public void testDeleteRoadmapNotFound() throws Exception {
-        mockMvc.perform(delete("/roadmap/delete/999")
+        mockMvc.perform(delete("/api/roadmap/delete/999")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + validToken))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().string("Roadmap not found"));
@@ -207,20 +207,20 @@ public class RoadmapControllerTest {
     @Test
     public void testUnauthorizedAccess() throws Exception {
         // 각 엔드포인트에 대한 인증되지 않은 접근 테스트
-        mockMvc.perform(get("/roadmap/getallroadmaps"))
+        mockMvc.perform(get("/api/roadmap/getallroadmaps"))
                 .andExpect(status().isUnauthorized());
 
-        mockMvc.perform(post("/roadmap/saveroadmap")
+        mockMvc.perform(post("/api/roadmap/saveroadmap")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
                 .andExpect(status().isUnauthorized());
 
-        mockMvc.perform(put("/roadmap/updateroadmap")
+        mockMvc.perform(put("/api/roadmap/updateroadmap")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
                 .andExpect(status().isUnauthorized());
 
-        mockMvc.perform(delete("/roadmap/delete/1"))
+        mockMvc.perform(delete("/api/roadmap/delete/1"))
                 .andExpect(status().isUnauthorized());
     }
 }

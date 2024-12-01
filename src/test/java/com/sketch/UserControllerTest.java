@@ -61,7 +61,7 @@ public class UserControllerTest {
         userSaveDTO.setUsername("newUser");
         userSaveDTO.setPassword("newPassword");
 
-        mockMvc.perform(post("/users/register")
+        mockMvc.perform(post("/api/users/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userSaveDTO)))
                 .andExpect(status().isCreated())
@@ -71,10 +71,10 @@ public class UserControllerTest {
     @Test
     public void testRegisterUserConflict() throws Exception {
         UserSaveDTO userSaveDTO = new UserSaveDTO();
-        userSaveDTO.setUsername(testUser.getUsername()); // 기존 사용자명 사용
+        userSaveDTO.setUsername(testUser.getUsername());
         userSaveDTO.setPassword("newPassword");
 
-        mockMvc.perform(post("/users/register")
+        mockMvc.perform(post("/api/users/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userSaveDTO)))
                 .andExpect(status().isConflict())
@@ -87,7 +87,7 @@ public class UserControllerTest {
         loginRequest.setUsername(testUser.getUsername());
         loginRequest.setPassword("testPassword"); // setup()에서 사용한 비밀번호와 동일해야 함
 
-        mockMvc.perform(post("/users/login")
+        mockMvc.perform(post("/api/users/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk()) // 성공적으로 로그인
@@ -99,9 +99,9 @@ public class UserControllerTest {
     public void testLoginUserUnauthorized() throws Exception {
         UserLoginDTO loginRequest = new UserLoginDTO();
         loginRequest.setUsername("testUser");
-        loginRequest.setPassword("wrongPassword"); // 잘못된 비밀번호
+        loginRequest.setPassword("wrongPassword");
 
-        mockMvc.perform(post("/users/login")
+        mockMvc.perform(post("/api/users/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isUnauthorized());
@@ -109,7 +109,7 @@ public class UserControllerTest {
 
     @Test
     public void testLogoutSuccess() throws Exception {
-        mockMvc.perform(post("/users/logout")
+        mockMvc.perform(post("/api/users/logout")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + validToken)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -119,7 +119,7 @@ public class UserControllerTest {
     @Test
     public void testLogoutUnauthorizedInvalidToken() throws Exception {
         String invalidToken = "invalid.token.example";
-        mockMvc.perform(post("/users/logout")
+        mockMvc.perform(post("/api/users/logout")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + invalidToken)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized())
@@ -128,7 +128,7 @@ public class UserControllerTest {
 
     @Test
     public void testLogoutNoToken() throws Exception {
-        mockMvc.perform(post("/users/logout")
+        mockMvc.perform(post("/api/users/logout")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }

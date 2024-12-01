@@ -28,10 +28,10 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/users/login", "/users/register").permitAll() // 로그인/회원가입 허용
-                        .anyRequest().authenticated() // 나머지 요청은 인증 필요
+                        .requestMatchers("/api/users/login", "/api/users/register").permitAll()
+                        .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // 필터 등록
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

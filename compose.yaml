@@ -20,9 +20,9 @@ services:
       context: ./python-flask-app   # Python Dockerfile 경로
       dockerfile: Dockerfile-python # Python Flask Dockerfile 파일명
     ports:
-      - "5001:5000"                 # 호스트의 5001 포트를 Flask 컨테이너의 5000 포트에 매핑
+      - "5002:5000"                 # 호스트의 5001 포트를 Flask 컨테이너의 5000 포트에 매핑
     environment:
-      - OPENAI_API_KEY=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
+      - OPENAI_API_KEY=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
 
   db-service:
     image: mysql:8.0

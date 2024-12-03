@@ -11,24 +11,26 @@ services:
 
     environment:
       - PYTHON_SERVICE_URL=http://python-service:5000 # Python 서비스의 URL
-      - SPRING_DATASOURCE_URL=jdbc:mysql://db-service:3307/sketch_db # DB URL
+      - SPRING_DATASOURCE_URL=jdbc:mysql://sketchudb.crgo2k2ykh64.ap-northeast-2.rds.amazonaws.com:3306/sketchudb # DB URL
       - SPRING_DATASOURCE_USERNAME=root # DB 사용자명
-      - SPRING_DATASOURCE_PASSWORD=Dd905925@ # DB 비밀번호
+      - SPRING_DATASOURCE_PASSWORD=Dd905925! # DB 비밀번호
+      - SPRING_REDIS_HOST=clustercfg.sketchublacklist.lss30k.memorydb.ap-northeast-2.amazonaws.com # Redis 호스트
+      - SPRING_REDIS_PORT=6379 # Redis 포트
 
   python-service:
     build:
       context: ./python-flask-app   # Python Dockerfile 경로
       dockerfile: Dockerfile-python # Python Flask Dockerfile 파일명
     ports:
-      - "5002:5000"                 # 호스트의 5001 포트를 Flask 컨테이너의 5000 포트에 매핑
+      - "5002:5000"                 # 호스트의 5002 포트를 Flask 컨테이너의 5000 포트에 매핑
     environment:
-      - OPENAI_API_KEY=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
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
 
   db-service:
     image: mysql:8.0
     environment:
-      - MYSQL_ROOT_PASSWORD=Dd905925@
-      - MYSQL_DATABASE=sketch_db
+      - MYSQL_ROOT_PASSWORD=Dd905925!
+      - MYSQL_DATABASE=sketchudb
     ports:
       - "3307:3306"                 # 호스트의 3307 포트를 컨테이너의 3306 포트에 매핑
     volumes:

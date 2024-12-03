@@ -18,7 +18,7 @@ public class JwtTokenProvider {
 
     private Key SECRET_KEY;
 
-    private static final long ACCESS_TOKEN_EXPIRATION = 900000; // 15분
+    private static final long ACCESS_TOKEN_EXPIRATION = 9000000; // 150분
     private static final long REFRESH_TOKEN_EXPIRATION = 604800000; // 7일
 
     @PostConstruct
